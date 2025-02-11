@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ImageBackground, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Button, Linking } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker from react-native-maps
 import * as Location from 'expo-location'; // Import expo-location to access the user's location
-import { Linking } from 'react-native'; // Import Linking to use for calling and messaging
 
 const HomeDashboard = ({ navigation }) => {
     const [profileImage, setProfileImage] = useState('https://via.placeholder.com/100');
@@ -21,10 +20,7 @@ const HomeDashboard = ({ navigation }) => {
     const [location, setLocation] = useState(null); // To store the user's location
     const [errorMsg, setErrorMsg] = useState(null);
 
-    const [contacts, setContacts] = useState([
-        { name: 'John Doe', phone: '1234567890' }, // Example contacts
-        { name: 'Jane Smith', phone: '9876543210' },
-    ]);
+    const [isModalVisible, setIsModalVisible] = useState(true); // Modal visibility state
 
     const API_KEY = '8a2d7b4762f1e944878db3dc8463ea6e';
 
@@ -95,8 +91,37 @@ const HomeDashboard = ({ navigation }) => {
         Linking.openURL(url);
     };
 
+    // Handle closing the modal
+    const closeModal = () => {
+        setIsModalVisible(false);
+    };
+
+    // Open the terms and conditions link
+    const openTermsAndConditions = () => {
+        Linking.openURL('https://www.yourwebsite.com/terms-and-conditions'); // Replace with your URL
+    };
+
     return (
         <View style={styles.container}>
+            {/* Modal for Introduction */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isModalVisible}
+                onRequestClose={closeModal}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Welcome to Your Personalized Dashboard App!</Text>
+                        <Text style={styles.modalText}>
+                            This app is designed to offer you a seamless and user-friendly experience, putting everything you need in one place.
+                            Whether you're looking to track the weather, manage your personal health, or stay connected with loved ones, this app has you covered.
+                        </Text>
+                        <Button title="Got it!" onPress={closeModal} />
+                    </View>
+                </View>
+            </Modal>
+
             {/* Profile Section */}
             <View style={styles.profileContainer}>
                 <TouchableOpacity onPress={pickImage} style={styles.profileImageContainer}>
@@ -105,7 +130,7 @@ const HomeDashboard = ({ navigation }) => {
                         <Ionicons name="camera" size={24} color="white" />
                     </View>
                 </TouchableOpacity>
-                <Text style={styles.greeting}>Hello, Alby Pisot</Text>
+                <Text style={styles.greeting}>Hello, Aldrin</Text>
             </View>
 
             {/* Weather and Map Widgets */}
@@ -114,29 +139,22 @@ const HomeDashboard = ({ navigation }) => {
                     style={styles.weatherContainer}
                     onPress={() => navigation.navigate('WeatherScreen', { weather })}
                 >
-                    <ImageBackground
-                        source={require('../assets/images/stargazing.png')}
-                        style={styles.weatherBackground}
-                        imageStyle={{ borderRadius: 20 }}
+                    <LinearGradient
+                        colors={['#021526', '#03346E']}
+                        style={styles.gradientOverlay}
                     >
-                        {/* Apply gradient overlay */}
-                        <LinearGradient
-                            colors={['#021526', '#03346E']}
-                            style={styles.gradientOverlay}
-                        >
-                            <View style={styles.weatherWidget}>
-                                <Text style={styles.widgetTitle}>{weather.city}</Text>
-                                <Image source={{ uri: getWeatherIconUrl() }} style={styles.weatherIcon} />
-                                <Text style={styles.widgetTemp}>{weather.temp}</Text>
-                                <Text style={styles.widgetDescription}>{weather.description}</Text>
-                                <View style={styles.weatherDetails}>
-                                    <Text style={styles.detailsText}>Humidity: {weather.humidity}</Text>
-                                    <Text style={styles.detailsText}>Wind Speed: {weather.windSpeed}</Text>
-                                    <Text style={styles.detailsText}>Feels Like: {weather.feelsLike}</Text>
-                                </View>
+                        <View style={styles.weatherWidget}>
+                            <Text style={styles.widgetTitle}>{weather.city}</Text>
+                            <Image source={{ uri: getWeatherIconUrl() }} style={styles.weatherIcon} />
+                            <Text style={styles.widgetTemp}>{weather.temp}</Text>
+                            <Text style={styles.widgetDescription}>{weather.description}</Text>
+                            <View style={styles.weatherDetails}>
+                                <Text style={styles.detailsText}>Humidity: {weather.humidity}</Text>
+                                <Text style={styles.detailsText}>Wind Speed: {weather.windSpeed}</Text>
+                                <Text style={styles.detailsText}>Feels Like: {weather.feelsLike}</Text>
                             </View>
-                        </LinearGradient>
-                    </ImageBackground>
+                        </View>
+                    </LinearGradient>
                 </TouchableOpacity>
                 <View style={styles.widget}>
                     <Image source={{ uri: 'https://via.placeholder.com/150' }} style={styles.mapImage} />
@@ -176,6 +194,13 @@ const HomeDashboard = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
             </View>
+
+            {/* Terms and Agreement Section */}
+            <View style={styles.termsContainer}>
+                <TouchableOpacity onPress={openTermsAndConditions}>
+                    <Text style={styles.termsText}>Terms and Conditions</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -193,7 +218,6 @@ const styles = StyleSheet.create({
         padding: 60,
         borderRadius: 20,
         marginBottom: 20,
-        position: 'relative',
     },
     profileImageContainer: {
         position: 'relative',
@@ -203,6 +227,8 @@ const styles = StyleSheet.create({
         width: 170,
         height: 170,
         borderRadius: 50,
+        borderWidth: 5,
+        borderColor: '#FF6347',
     },
     uploadIconContainer: {
         position: 'absolute',
@@ -222,16 +248,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 20,
-        width: '143%', // Ensure this takes up the full width
+        width: '143%',
     },
     weatherContainer: {
-        flex: 1, // This makes it take equal space as the map container
-        marginRight: 10,
-    },
-    weatherBackground: {
         flex: 1,
-        borderRadius: 20,
-        overflow: 'hidden',
+        marginRight: 10,
     },
     gradientOverlay: {
         flex: 1,
@@ -278,7 +299,7 @@ const styles = StyleSheet.create({
     },
     mapContainer: {
         height: 250,
-        width: '100%', // Make the map container take the full width as well
+        width: '100%',
         marginBottom: 20,
     },
     map: {
@@ -300,31 +321,38 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderRadius: 20,
     },
-    contactsContainer: {
-        marginBottom: 20,
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
     },
-    contactsTitle: {
-        fontSize: 24,
+    modalContent: {
+        width: '80%',
+        backgroundColor: 'white',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 10,
     },
-    contactItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    modalText: {
+        fontSize: 16,
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    termsContainer: {
         alignItems: 'center',
-        backgroundColor: 'white',
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 10,
+        marginTop: 20,
+        paddingBottom: 30,
     },
-    contactName: {
-        fontSize: 18,
-    },
-    contactActions: {
-        flexDirection: 'row',
-    },
-    actionButton: {
-        marginLeft: 10,
+    termsText: {
+        fontSize: 16,
+        color: 'blue',
+        textDecorationLine: 'underline',
     },
 });
 

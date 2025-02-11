@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Linking, FlatList, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Linking, FlatList, Modal, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+// Get screen dimensions
+const { width, height } = Dimensions.get('window');
 
 const ContactsScreen = ({ navigation }) => {
     // State to hold contacts
@@ -10,21 +13,40 @@ const ContactsScreen = ({ navigation }) => {
     const [message, setMessage] = useState('Hello, I need your assistance.');
     const [isModalVisible, setIsModalVisible] = useState(false);
 
-    // Default disaster hotline
+    // Default contact categories
+    const priorityContact = {
+        name: "Person 1",
+        phone: "09123456789", // Example phone number for the priority contact
+        type: "priority",
+        addedByUser: false
+    };
+
     const disasterHotline = {
         name: "Disaster Hotline",
         phone: "112", // Example hotline number (adjust as necessary)
+        type: "hotline",
+        addedByUser: false
     };
 
-    // Add the default disaster hotline to the contact list on initial load
+    const emergencyHotline = {
+        name: "Emergency Hotline",
+        phone: "911",
+        type: "hotline",
+        addedByUser: false
+    };
+
+    // Add the priority and hotline contacts on initial load
     useEffect(() => {
-        setContacts([disasterHotline]);
+        setContacts([priorityContact, disasterHotline, emergencyHotline]);
     }, []);
 
     // Function to add contact
     const addContact = () => {
         if (name && phone) {
-            setContacts([...contacts, { name, phone }]);
+            setContacts([ 
+                ...contacts, 
+                { name, phone, type: 'priority', addedByUser: true }  // Set type to 'priority' for contact person
+            ]);
             setName('');
             setPhone('');
             setIsModalVisible(false); // Close the modal after adding the contact
@@ -43,13 +65,51 @@ const ContactsScreen = ({ navigation }) => {
         Linking.openURL(`sms:${phoneNumber}?body=${encodeURIComponent(message)}`).catch(err => console.error('Error sending message:', err));
     };
 
+    // Function to separate priority and hotline contacts
+    const getSortedContacts = () => {
+        const priorityContacts = contacts.filter(contact => contact.type === 'priority');
+        const hotlineContacts = contacts.filter(contact => contact.type === 'hotline');
+        return { priorityContacts, hotlineContacts };
+    };
+
+    const { priorityContacts, hotlineContacts } = getSortedContacts();
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Manage Contacts</Text>
 
-            {/* Contact List */}
+            {/* Contact Person Section */}
+            <Text style={styles.sectionTitle}>Contact Person:</Text>
             <FlatList
-                data={contacts}
+                data={priorityContacts}
+                renderItem={({ item }) => (
+                    <View style={styles.contactCard}>
+                        <Text style={styles.contactName}>
+                            {item.name} {item.addedByUser && <Text style={styles.addedByUser}></Text>}
+                        </Text>
+                        <View style={styles.contactActions}>
+                            <TouchableOpacity
+                                style={styles.iconButton}
+                                onPress={() => makeCall(item.phone)}
+                            >
+                                <Ionicons name="call" size={width * 0.1} color="green" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.iconButton}
+                                onPress={() => sendMessage(item.phone)}
+                            >
+                                <Ionicons name="chatbubble" size={width * 0.1} color="blue" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+            />
+
+            {/* Hotline Section */}
+            <Text style={styles.sectionTitle}>Hotlines:</Text>
+            <FlatList
+                data={hotlineContacts}
                 renderItem={({ item }) => (
                     <View style={styles.contactCard}>
                         <Text style={styles.contactName}>{item.name}</Text>
@@ -58,13 +118,13 @@ const ContactsScreen = ({ navigation }) => {
                                 style={styles.iconButton}
                                 onPress={() => makeCall(item.phone)}
                             >
-                                <Ionicons name="call" size={50} color="green" />
+                                <Ionicons name="call" size={width * 0.1} color="green" />
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.iconButton}
                                 onPress={() => sendMessage(item.phone)}
                             >
-                                <Ionicons name="chatbubble" size={50} color="blue" />
+                                <Ionicons name="chatbubble" size={width * 0.1} color="blue" />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -117,13 +177,13 @@ const ContactsScreen = ({ navigation }) => {
             <View style={styles.navbarContainer}>
                 <View style={styles.navbar}>
                     <TouchableOpacity onPress={() => navigation.navigate('HomeDashboard')}>
-                        <Ionicons name="home" size={40} color="orange" />
+                        <Ionicons name="home" size={width * 0.1} color="orange" />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate('MedicineTracker')}>
-                        <Ionicons name="heart" size={40} color="red" />
+                        <Ionicons name="heart" size={width * 0.1} color="red" />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => navigation.navigate('ContactsScreen')}>
-                        <Ionicons name="call" size={40} color="green" />
+                        <Ionicons name="call" size={width * 0.1} color="green" />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -134,20 +194,53 @@ const ContactsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        padding: width * 0.05,
         backgroundColor: '#f5f5f5',
         paddingBottom: 80,  // Adjusted to give space for the navbar
     },
     title: {
-        bottom:-20,
-        fontSize: 32,
+        fontSize: width * 0.08,
         fontWeight: 'bold',
         marginBottom: 20,
         color: '#333',
     },
+    sectionTitle: {
+        fontSize: width * 0.07,
+        fontWeight: 'bold',
+        marginTop: 30,
+        color: '#333',
+    },
+    contactCard: {
+        backgroundColor: 'white',
+        padding: width * 0.06,
+        borderRadius: 15,
+        marginBottom: 25,
+        alignItems: 'center',
+    },
+    contactName: {
+        fontSize: width * 0.07,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'center',  // Ensure name is centered
+        flexWrap: 'wrap',  // Allow name to wrap in case it's too long
+        maxWidth: width * 0.8,  // Limit width for longer names
+    },
+    addedByUser: {
+        fontStyle: 'italic',
+        color: '#888',
+        fontSize: width * 0.05,
+    },
+    contactActions: {
+        flexDirection: 'row',
+        marginTop: height * 0.02,  // Add space between name and actions
+    },
+    iconButton: {
+        marginHorizontal: width * 0.08,
+        padding: width * 0.03,
+    },
     input: {
-        height: 55,
-        fontSize: 22,
+        height: height * 0.07,
+        fontSize: width * 0.06,
         borderColor: '#ccc',
         borderWidth: 2,
         borderRadius: 10,
@@ -156,62 +249,24 @@ const styles = StyleSheet.create({
     },
     addButton: {
         backgroundColor: '#4CAF50',
-        padding: 20,
+        padding: height * 0.02,
         borderRadius: 10,
         alignItems: 'center',
         marginBottom: 20,
     },
     addButtonText: {
         color: '#fff',
-        fontSize: 22,
+        fontSize: width * 0.06,
     },
     cancelButton: {
         backgroundColor: '#f44336',
-        padding: 20,
+        padding: height * 0.02,
         borderRadius: 10,
         alignItems: 'center',
     },
     cancelButtonText: {
         color: '#fff',
-        fontSize: 22,
-    },
-    contactCard: {
-        backgroundColor: 'white',
-        padding: 25,
-        borderRadius: 15,
-        marginBottom: 25,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    contactName: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    contactActions: {
-        flexDirection: 'row',
-    },
-    iconButton: {
-        marginLeft: 30,
-        padding: 15,
-    },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContainer: {
-        backgroundColor: '#fff',
-        padding: 40,
-        borderRadius: 15,
-        width: '80%',
-    },
-    modalTitle: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        marginBottom: 25,
+        fontSize: width * 0.06,
     },
     navbarContainer: {
         position: 'absolute',
@@ -221,11 +276,29 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderTopWidth: 2,
         borderTopColor: '#ccc',
-        paddingVertical: 15,
+        paddingVertical: height * 0.02,
     },
     navbar: {
         flexDirection: 'row',
         justifyContent: 'space-around',
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Solid background to dim behind the modal
+    },
+    modalContainer: {
+        width: width * 0.8,
+        padding: width * 0.05,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: width * 0.08,
+        fontWeight: 'bold',
+        marginBottom: 20,
     },
 });
 
