@@ -15,7 +15,7 @@ const ContactsScreen = ({ navigation }) => {
 
     // Default contact categories
     const priorityContact = {
-        name: "Person 1",
+        name: "Person 01",
         phone: "09123456789", // Example phone number for the priority contact
         type: "priority",
         addedByUser: false

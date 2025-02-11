@@ -112,7 +112,7 @@ const HomeDashboard = ({ navigation }) => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Welcome to Your Personalized Dashboard App!</Text>
+                        <Text style={styles.modalTitle}>Welcome to ElderEase!</Text>
                         <Text style={styles.modalText}>
                             This app is designed to offer you a seamless and user-friendly experience, putting everything you need in one place.
                             Whether you're looking to track the weather, manage your personal health, or stay connected with loved ones, this app has you covered.
