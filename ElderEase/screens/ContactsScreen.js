@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Linking, FlatList, Modal, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import NavBar from '../components/NavBar'; // Import NavBar
 
 // Get screen dimensions
 const { width, height } = Dimensions.get('window');
@@ -173,20 +174,7 @@ const ContactsScreen = ({ navigation }) => {
                 </View>
             </Modal>
 
-            {/* Navigation Bar */}
-            <View style={styles.navbarContainer}>
-                <View style={styles.navbar}>
-                    <TouchableOpacity onPress={() => navigation.navigate('HomeDashboard')}>
-                        <Ionicons name="home" size={width * 0.1} color="orange" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('MedicineTracker')}>
-                        <Ionicons name="heart" size={width * 0.1} color="red" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('ContactsScreen')}>
-                        <Ionicons name="call" size={width * 0.1} color="green" />
-                    </TouchableOpacity>
-                </View>
-            </View>
+            <NavBar navigation={navigation} /> {/* Add NavBar here */}
         </View>
     );
 };
@@ -267,20 +255,6 @@ const styles = StyleSheet.create({
     cancelButtonText: {
         color: '#fff',
         fontSize: width * 0.06,
-    },
-    navbarContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: '#fff',
-        borderTopWidth: 2,
-        borderTopColor: '#ccc',
-        paddingVertical: height * 0.02,
-    },
-    navbar: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
     },
     modalOverlay: {
         flex: 1,

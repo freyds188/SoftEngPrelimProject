@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, Keyb
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import moment from 'moment'; // Import moment for time formatting
+import NavBar from '../components/NavBar'; // Import NavBar
 
 const MedicineTracker = ({ navigation }) => {
     const [selectedDate, setSelectedDate] = useState('');
@@ -145,20 +146,7 @@ const MedicineTracker = ({ navigation }) => {
                 </View>
             </Modal>
 
-            {/* Navbar */}
-            <View style={styles.navbarContainer}>
-                <View style={styles.navbar}>
-                    <TouchableOpacity onPress={() => navigation.navigate('HomeDashboard')}>
-                        <Ionicons name="home" size={40} color="orange" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('MedicineTracker')}>
-                        <Ionicons name="heart" size={40} color="red" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('ContactsScreen')}>
-                        <Ionicons name="call" size={40} color="green" />
-                    </TouchableOpacity>
-                </View>
-            </View>
+            <NavBar navigation={navigation} /> {/* Add NavBar here */}
         </KeyboardAvoidingView>
     );
 };

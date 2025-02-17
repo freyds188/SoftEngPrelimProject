@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { View, Text, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 
+
 const Login = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState(''); 
@@ -95,6 +96,7 @@ const Login = ({ navigation }) => {
               </TouchableOpacity> 
             </View>
           </View>
+      
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>

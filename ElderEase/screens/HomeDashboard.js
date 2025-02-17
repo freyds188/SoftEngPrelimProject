@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Button, Linking } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Button, Linking, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import MapView, { Marker } from 'react-native-maps'; 
-import * as Location from 'expo-location'; 
+import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import usePreventRemove from '../hooks/usePreventRemove';
+import TutorialScreen from './TutorialScreen';
+import NavBar from '../components/NavBar'; // Import NavBar
 
 const HomeDashboard = ({ navigation }) => {
     usePreventRemove();
@@ -22,35 +24,56 @@ const HomeDashboard = ({ navigation }) => {
         feelsLike: '--',
         icon: '01d',
     });
-    const [location, setLocation] = useState(null); 
+    const [location, setLocation] = useState(null);
     const [errorMsg, setErrorMsg] = useState(null);
 
-    const [isModalVisible, setIsModalVisible] = useState(true); 
+    const [isModalVisible, setIsModalVisible] = useState(true);
     const [hasSeenIntro, setHasSeenIntro] = useState(false);
+    const [isMenuVisible, setIsMenuVisible] = useState(false);
 
-    const API_KEY = '8a2d7b4762f1e944878db3dc8463ea6e';
+    const API_KEY = '2960c45ce4594eec984215930251702'; // Your WeatherAPI key
+    const API_URL = `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=Cabuyao`;
 
     // Fetch weather data
     useEffect(() => {
         const fetchWeather = async () => {
             try {
-                const response = await fetch(
-                    `https://api.openweathermap.org/data/2.5/weather?q=Cabuyao,PH&units=metric&appid=${API_KEY}`
-                );
+                const response = await fetch(API_URL);
                 const data = await response.json();
 
-                setWeather({
-                    city: data.name,
-                    temp: `${Math.round(data.main.temp)}°C`,
-                    description: data.weather[0].description,
-                    humidity: `${data.main.humidity}%`,
-                    windSpeed: `${data.wind.speed} m/s`,
-                    feelsLike: `${Math.round(data.main.feels_like)}°C`,
-                    icon: data.weather[0].icon,
-                });
+                if (data.location && data.current) {
+                    setWeather({
+                        city: data.location.name,
+                        temp: `${data.current.temp_c}°C`,
+                        description: data.current.condition.text,
+                        humidity: `${data.current.humidity}%`,
+                        windSpeed: `${data.current.wind_kph} kph`,
+                        feelsLike: `${data.current.feelslike_c}°C`,
+                        icon: `https:${data.current.condition.icon}`,
+                    });
+                } else {
+                    console.error('Error fetching weather data:', data.error?.message);
+                    setWeather({
+                        city: 'Error',
+                        temp: '--',
+                        description: 'Unable to fetch weather',
+                        humidity: '--',
+                        windSpeed: '--',
+                        feelsLike: '--',
+                        icon: '01d',
+                    });
+                }
             } catch (error) {
                 console.error('Error fetching weather data:', error);
-                setWeather({ city: 'Error', temp: '--', description: 'Unable to fetch weather' });
+                setWeather({
+                    city: 'Error',
+                    temp: '--',
+                    description: 'Unable to fetch weather',
+                    humidity: '--',
+                    windSpeed: '--',
+                    feelsLike: '--',
+                    icon: '01d',
+                });
             }
         };
 
@@ -128,10 +151,6 @@ const HomeDashboard = ({ navigation }) => {
         }
     };
 
-    const getWeatherIconUrl = () => {
-        return `http://openweathermap.org/img/wn/${weather.icon}.png`;
-    };
-
     const handleCall = (phoneNumber) => {
         const url = `tel:${phoneNumber}`;
         Linking.openURL(url);
@@ -149,8 +168,64 @@ const HomeDashboard = ({ navigation }) => {
         await AsyncStorage.setItem('hasSeenIntro', 'true'); // Set flag in AsyncStorage
     };
 
+    // Handle menu options
+    const handleHelp = () => {
+        setIsMenuVisible(false);
+        navigation.navigate('TutorialScreen'); // Navigate to a tutorial screen
+    };
+
+    const handleLogout = async () => {
+        setIsMenuVisible(false);
+        await AsyncStorage.removeItem('userName'); // Clear user name
+        await AsyncStorage.removeItem('hasSeenIntro'); // Clear intro status
+        await AsyncStorage.removeItem(`profileImage_${registeredUserName}`); // Clear profile image
+        navigation.navigate('Login'); // Navigate to login screen
+    };
+
+    const handleAboutDevTeam = () => {
+        setIsMenuVisible(false);
+        navigation.navigate('AboutDevTeamScreen'); // Navigate to about dev team screen
+    };
+
     return (
         <View style={styles.container}>
+            {/* Menu Button */}
+            <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => setIsMenuVisible(true)}
+            >
+                <Ionicons name="menu" size={32} color="black" />
+            </TouchableOpacity>
+
+            {/* Menu Modal */}
+            <Modal
+                transparent={true}
+                visible={isMenuVisible}
+                onRequestClose={() => setIsMenuVisible(false)}
+            >
+                <View style={styles.menuModalContainer}>
+                    <View style={styles.menuModalContent}>
+                        {/* Logo */}
+                        <Image
+                            source={require('../assets/images/elderease.png')} // Replace with your logo path
+                            style={styles.logo}
+                        />
+                        <TouchableOpacity onPress={handleHelp} style={styles.menuOption}>
+                            <Text style={styles.menuOptionText}>Help - Tutorial</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleAboutDevTeam} style={styles.menuOption}>
+                            <Text style={styles.menuOptionText}>About Dev Team</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleLogout} style={styles.menuOption}>
+                            <Text style={styles.menuOptionText}>Logout</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setIsMenuVisible(false)} style={styles.menuOption}>
+                            <Text style={styles.menuOptionText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
             {/* Modal for Introduction */}
             {isModalVisible && !hasSeenIntro && (
                 <Modal
@@ -187,7 +262,7 @@ const HomeDashboard = ({ navigation }) => {
             <View style={styles.widgetContainer}>
                 <TouchableOpacity
                     style={styles.weatherContainer}
-                    onPress={() => navigation.navigate('WeatherScreen', { weather })}
+                    onPress={() => navigation.navigate('WeatherScreen', { city: weather.city })} // Pass city to WeatherScreen
                 >
                     <LinearGradient
                         colors={['#021526', '#03346E']}
@@ -195,7 +270,7 @@ const HomeDashboard = ({ navigation }) => {
                     >
                         <View style={styles.weatherWidget}>
                             <Text style={styles.widgetTitle}>{weather.city}</Text>
-                            <Image source={{ uri: getWeatherIconUrl() }} style={styles.weatherIcon} />
+                            <Image source={{ uri: weather.icon }} style={styles.weatherIcon} />
                             <Text style={styles.widgetTemp}>{weather.temp}</Text>
                             <Text style={styles.widgetDescription}>{weather.description}</Text>
                             <View style={styles.weatherDetails}>
@@ -226,24 +301,11 @@ const HomeDashboard = ({ navigation }) => {
                         <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} />
                     </MapView>
                 ) : (
-                    <Text>{errorMsg ? errorMsg : 'Loading location...'}</Text> 
+                    <Text>{errorMsg ? errorMsg : 'Loading location...'}</Text>
                 )}
             </View>
 
-            {/* Bottom Navigation */}
-            <View style={styles.navbarContainer}>
-                <View style={styles.navbar}>
-                    <TouchableOpacity onPress={() => navigation.navigate('HomeDashboard')}>
-                        <Ionicons name="home" size={32} color="orange" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('MedicineTracker')}>
-                        <Ionicons name="heart" size={32} color="red" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('ContactsScreen')}>
-                        <Ionicons name="call" size={32} color="green" />
-                    </TouchableOpacity>
-                </View>
-            </View>
+            <NavBar navigation={navigation} /> {/* Add NavBar here */}
         </View>
     );
 };
@@ -349,21 +411,6 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: 20,
     },
-    navbarContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        paddingBottom: 30,
-        backgroundColor: 'white',
-    },
-    navbar: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingVertical: 25,
-        backgroundColor: 'white',
-        borderRadius: 20,
-    },
     modalContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -386,6 +433,41 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 20,
         textAlign: 'center',
+    },
+    menuButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        zIndex: 1,
+    },
+    menuModalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    menuModalContent: {
+        width: '60%',
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+        alignItems: 'center',
+    },
+    menuOption: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+        width: '100%',
+        alignItems: 'center',
+    },
+    menuOptionText: {
+        fontSize: 18,
+        textAlign: 'center',
+    },
+    logo: {
+        width: 100,
+        height: 100,
+        marginBottom: 20,
     },
 });
 
