@@ -8,10 +8,11 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import usePreventRemove from '../hooks/usePreventRemove';
 
-const HomeDashboard = ({ navigation, userName }) => {
+const HomeDashboard = ({ navigation }) => {
     usePreventRemove();
 
-    const [profileImage, setProfileImage] = useState('https://via.placeholder.com/100');
+    const [profileImage, setProfileImage] = useState('https://via.placeholder.com/100'); // Default image
+    const [registeredUserName, setRegisteredUserName] = useState(''); // State for user name
     const [weather, setWeather] = useState({
         city: 'Cabuyao City',
         temp: 'Loading...',
@@ -68,25 +69,41 @@ const HomeDashboard = ({ navigation, userName }) => {
         })();
     }, []);
 
-    // Load profile image and check if the introduction has been seen
+    // Load profile image and user name
     useEffect(() => {
-        const loadProfileImage = async () => {
-            const storedImage = await AsyncStorage.getItem('profileImage');
-            if (storedImage) {
-                setProfileImage(storedImage);
+        const loadProfileData = async () => {
+            try {
+                const storedName = await AsyncStorage.getItem('userName'); // Retrieve user name
+                console.log('Retrieved user name from AsyncStorage:', storedName); // Debugging line
+                if (storedName) {
+                    setRegisteredUserName(storedName); // Set user name
+
+                    // Load profile image for the specific user
+                    const storedImage = await AsyncStorage.getItem(`profileImage_${storedName}`);
+                    if (storedImage) {
+                        setProfileImage(storedImage);
+                    }
+                } else {
+                    console.log('No user name found in AsyncStorage.'); // Log if no user name is found
+                }
+            } catch (error) {
+                console.error('Error loading profile data:', error);
             }
         };
 
-        const checkIntroSeen = async () => {
-            const introSeen = await AsyncStorage.getItem('hasSeenIntro');
-            if (introSeen) {
+        loadProfileData();
+    }, []);
+
+    // Load intro status
+    useEffect(() => {
+        const loadIntroStatus = async () => {
+            const seenIntro = await AsyncStorage.getItem('hasSeenIntro');
+            if (seenIntro === 'true') {
                 setHasSeenIntro(true);
-                setIsModalVisible(false); // Hide modal if intro has been seen
             }
         };
 
-        loadProfileImage();
-        checkIntroSeen();
+        loadIntroStatus();
     }, []);
 
     const pickImage = async () => {
@@ -98,7 +115,16 @@ const HomeDashboard = ({ navigation, userName }) => {
         });
 
         if (!result.canceled) {
-            setProfileImage(result.assets[0].uri);
+            const newImageUri = result.assets[0].uri;
+            setProfileImage(newImageUri);
+
+            // Save the new profile image for the specific user
+            try {
+                await AsyncStorage.setItem(`profileImage_${registeredUserName}`, newImageUri);
+                console.log('Profile image saved successfully.');
+            } catch (error) {
+                console.error('Error saving profile image:', error);
+            }
         }
     };
 
@@ -121,11 +147,6 @@ const HomeDashboard = ({ navigation, userName }) => {
     const closeModal = async () => {
         setIsModalVisible(false);
         await AsyncStorage.setItem('hasSeenIntro', 'true'); // Set flag in AsyncStorage
-    };
-
-    // Open the terms and conditions link
-    const openTermsAndConditions = () => {
-        Linking.openURL('https://www.yourwebsite.com/terms-and-conditions'); // Replace with your URL
     };
 
     return (
@@ -154,12 +175,12 @@ const HomeDashboard = ({ navigation, userName }) => {
             {/* Profile Section */}
             <View style={styles.profileContainer}>
                 <TouchableOpacity onPress={pickImage} style={styles.profileImageContainer}>
-                    <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                    <Image source={{ uri: profileImage || 'https://via.placeholder.com/100' }} style={styles.profileImage} />
                     <View style={styles.uploadIconContainer}>
                         <Ionicons name="camera" size={24} color="white" />
                     </View>
                 </TouchableOpacity>
-                <Text style={styles.greeting}>Hello, {userName}</Text>
+                <Text style={styles.greeting}>Hello, {registeredUserName || 'User'}</Text> {/* Display user name or default text */}
             </View>
 
             {/* Weather and Map Widgets */}
@@ -205,7 +226,7 @@ const HomeDashboard = ({ navigation, userName }) => {
                         <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} />
                     </MapView>
                 ) : (
-                    <Text>{errorMsg ? errorMsg : 'Loading location...'}</Text>
+                    <Text>{errorMsg ? errorMsg : 'Loading location...'}</Text> 
                 )}
             </View>
 

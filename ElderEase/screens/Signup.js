@@ -1,6 +1,22 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  StyleSheet,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SignUp = ({ navigation }) => {
   const [gender, setGender] = useState('');
@@ -13,7 +29,38 @@ const SignUp = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   const handleSignUp = async () => {
+    // Input validation
+    if (!name || !gender || !age || !mobile || !email || !password) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address.');
+      return;
+    }
+
+    if (isNaN(age) || age < 1 || age > 120) {
+      Alert.alert('Error', 'Please enter a valid age.');
+      return;
+    }
+
+    if (mobile.length < 10 || isNaN(mobile)) {
+      Alert.alert('Error', 'Please enter a valid mobile number.');
+      return;
+    }
+
     setLoading(true);
     console.log('Registration process started');
 
@@ -39,6 +86,12 @@ const SignUp = ({ navigation }) => {
 
       if (response.ok) {
         console.log('Registration successful');
+        try {
+          await AsyncStorage.setItem('userName', name); // Store the name
+          console.log('Stored user name in AsyncStorage:', name);
+        } catch (error) {
+          console.error('Error storing user name in AsyncStorage:', error);
+        }
         setTermsModalVisible(true);
       } else {
         console.log('Registration failed:', data.message);
@@ -59,15 +112,16 @@ const SignUp = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <StatusBar style="light" />
 
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <View style={styles.innerContainer}>
-          <TouchableOpacity 
-            style={styles.debugButton} 
+          <TouchableOpacity
+            style={styles.debugButton}
             onPress={() => navigation.navigate('Login')}
           >
             <Text style={styles.debugButtonText}>Login</Text>
@@ -94,8 +148,8 @@ const SignUp = ({ navigation }) => {
                 />
               </View>
 
-              <TouchableOpacity 
-                style={styles.inputContainer} 
+              <TouchableOpacity
+                style={styles.inputContainer}
                 onPress={() => setModalVisible(true)}
               >
                 <TextInput
@@ -113,24 +167,22 @@ const SignUp = ({ navigation }) => {
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}
               >
-                <View style={styles.modalView}>
-                  <Text style={styles.modalTitle}>Select Gender</Text>
-                  <TouchableOpacity onPress={() => { setGender('Male'); setModalVisible(false); }}>
-                    <Text style={styles.modalOption}>Male</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => { setGender('Female'); setModalVisible(false); }}>
-                    <Text style={styles.modalOption}>Female</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => { setGender('Other'); setModalVisible(false); }}>
-                    <Text style={styles.modalOption}>Other</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.modalCloseButton} 
-                    onPress={() => setModalVisible(false)}
-                  >
-                    <Text style={styles.modalCloseButtonText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
+                <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                  <View style={styles.modalBackdrop}>
+                    <View style={styles.modalView}>
+                      <Text style={styles.modalTitle}>Select Gender</Text>
+                      <TouchableOpacity onPress={() => { setGender('Male'); setModalVisible(false); }}>
+                        <Text style={styles.modalOption}>Male</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => { setGender('Female'); setModalVisible(false); }}>
+                        <Text style={styles.modalOption}>Female</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => { setGender('Other'); setModalVisible(false); }}>
+                        <Text style={styles.modalOption}>Other</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
               </Modal>
 
               <View style={styles.inputContainer}>
@@ -195,24 +247,28 @@ const SignUp = ({ navigation }) => {
         visible={termsModalVisible}
         onRequestClose={() => setTermsModalVisible(false)}
       >
-        <View style={styles.modalView}>
-          <Text style={styles.modalTitle}>Terms and Conditions</Text>
-          <Text style={styles.termsText}>
-            By signing up, you agree to our terms and conditions.
-          </Text>
-          <TouchableOpacity 
-            style={styles.modalCloseButton} 
-            onPress={handleAgreeToTerms}
-          >
-            <Text style={styles.modalCloseButtonText}>I Agree</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableWithoutFeedback onPress={() => setTermsModalVisible(false)}>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTitle}>Terms and Conditions</Text>
+              <ScrollView style={styles.termsScrollView}>
+                <Text style={styles.termsText}>
+                  By signing up, you agree to our terms and conditions. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </Text>
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={handleAgreeToTerms}
+              >
+                <Text style={styles.modalCloseButtonText}>I Agree</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </KeyboardAvoidingView>
   );
-}
-
-
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -289,16 +345,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
   modalView: {
-    position: 'absolute',
-    top: '30%',
-    left: '10%',
-    right: '10%',
+    width: '80%',
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   modalTitle: {
     fontSize: 20,
@@ -320,20 +378,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  agreeButton: {
-    backgroundColor: '#007BFF', // Change to your preferred color
-    borderRadius: 20,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  agreeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  termsScrollView: {
+    maxHeight: 200,
+    marginVertical: 10,
   },
   termsText: {
-    marginVertical: 10,
     textAlign: 'center',
   },
 });

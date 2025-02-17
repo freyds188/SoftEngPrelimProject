@@ -3,6 +3,7 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
+const AsyncStorage = require('@react-native-async-storage/async-storage');
 
 // Register
 router.post('/register', async (req, res) => {
@@ -29,7 +30,8 @@ router.post('/register', async (req, res) => {
             });
         });
 
-        res.status(201).json({ message: 'User registered successfully' });
+        // Return the user name in the response
+        res.status(201).json({ message: 'User registered successfully', userName: name });
     } catch (error) {
         console.error('Error registering user:', error); // Log the error for debugging
         res.status(500).json({ message: 'Error registering user' });
