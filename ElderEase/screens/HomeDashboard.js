@@ -3,10 +3,14 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Button, Linking
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import MapView, { Marker } from 'react-native-maps'; // Import MapView and Marker from react-native-maps
-import * as Location from 'expo-location'; // Import expo-location to access the user's location
+import MapView, { Marker } from 'react-native-maps'; 
+import * as Location from 'expo-location'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import usePreventRemove from '../hooks/usePreventRemove';
 
-const HomeDashboard = ({ navigation }) => {
+const HomeDashboard = ({ navigation, userName }) => {
+    usePreventRemove();
+
     const [profileImage, setProfileImage] = useState('https://via.placeholder.com/100');
     const [weather, setWeather] = useState({
         city: 'Cabuyao City',
@@ -17,10 +21,11 @@ const HomeDashboard = ({ navigation }) => {
         feelsLike: '--',
         icon: '01d',
     });
-    const [location, setLocation] = useState(null); // To store the user's location
+    const [location, setLocation] = useState(null); 
     const [errorMsg, setErrorMsg] = useState(null);
 
-    const [isModalVisible, setIsModalVisible] = useState(true); // Modal visibility state
+    const [isModalVisible, setIsModalVisible] = useState(true); 
+    const [hasSeenIntro, setHasSeenIntro] = useState(false);
 
     const API_KEY = '8a2d7b4762f1e944878db3dc8463ea6e';
 
@@ -63,6 +68,27 @@ const HomeDashboard = ({ navigation }) => {
         })();
     }, []);
 
+    // Load profile image and check if the introduction has been seen
+    useEffect(() => {
+        const loadProfileImage = async () => {
+            const storedImage = await AsyncStorage.getItem('profileImage');
+            if (storedImage) {
+                setProfileImage(storedImage);
+            }
+        };
+
+        const checkIntroSeen = async () => {
+            const introSeen = await AsyncStorage.getItem('hasSeenIntro');
+            if (introSeen) {
+                setHasSeenIntro(true);
+                setIsModalVisible(false); // Hide modal if intro has been seen
+            }
+        };
+
+        loadProfileImage();
+        checkIntroSeen();
+    }, []);
+
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -92,8 +118,9 @@ const HomeDashboard = ({ navigation }) => {
     };
 
     // Handle closing the modal
-    const closeModal = () => {
+    const closeModal = async () => {
         setIsModalVisible(false);
+        await AsyncStorage.setItem('hasSeenIntro', 'true'); // Set flag in AsyncStorage
     };
 
     // Open the terms and conditions link
@@ -104,23 +131,25 @@ const HomeDashboard = ({ navigation }) => {
     return (
         <View style={styles.container}>
             {/* Modal for Introduction */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={isModalVisible}
-                onRequestClose={closeModal}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Welcome to ElderEase!</Text>
-                        <Text style={styles.modalText}>
-                            This app is designed to offer you a seamless and user-friendly experience, putting everything you need in one place.
-                            Whether you're looking to track the weather, manage your personal health, or stay connected with loved ones, this app has you covered.
-                        </Text>
-                        <Button title="Got it!" onPress={closeModal} />
+            {isModalVisible && !hasSeenIntro && (
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={isModalVisible}
+                    onRequestClose={closeModal}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Welcome to ElderEase!</Text>
+                            <Text style={styles.modalText}>
+                                This app is designed to offer you a seamless and user-friendly experience, putting everything you need in one place.
+                                Whether you're looking to track the weather, manage your personal health, or stay connected with loved ones, this app has you covered.
+                            </Text>
+                            <Button title="Got it!" onPress={closeModal} />
+                        </View>
                     </View>
-                </View>
-            </Modal>
+                </Modal>
+            )}
 
             {/* Profile Section */}
             <View style={styles.profileContainer}>
@@ -130,7 +159,7 @@ const HomeDashboard = ({ navigation }) => {
                         <Ionicons name="camera" size={24} color="white" />
                     </View>
                 </TouchableOpacity>
-                <Text style={styles.greeting}>Hello, Aldrin</Text>
+                <Text style={styles.greeting}>Hello, {userName}</Text>
             </View>
 
             {/* Weather and Map Widgets */}
@@ -193,13 +222,6 @@ const HomeDashboard = ({ navigation }) => {
                         <Ionicons name="call" size={32} color="green" />
                     </TouchableOpacity>
                 </View>
-            </View>
-
-            {/* Terms and Agreement Section */}
-            <View style={styles.termsContainer}>
-                <TouchableOpacity onPress={openTermsAndConditions}>
-                    <Text style={styles.termsText}>Terms and Conditions</Text>
-                </TouchableOpacity>
             </View>
         </View>
     );
@@ -343,16 +365,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 20,
         textAlign: 'center',
-    },
-    termsContainer: {
-        alignItems: 'center',
-        marginTop: 20,
-        paddingBottom: 30,
-    },
-    termsText: {
-        fontSize: 16,
-        color: 'blue',
-        textDecorationLine: 'underline',
     },
 });
 

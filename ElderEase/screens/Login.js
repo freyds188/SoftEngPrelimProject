@@ -1,8 +1,45 @@
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 
 const Login = ({ navigation }) => {
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState(''); 
+  const [password, setPassword] = useState(''); 
+
+  const handleLogin = async () => {
+    setLoading(true);
+    console.log('Login attempt initiated with:', { email, password }); 
+
+    try {
+      const response = await fetch('http://192.168.18.56:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Response data:', data); // Log the response data
+
+      if (response.ok) {
+        console.log('Login successful:', data);
+        navigation.navigate('HomeDashboard');
+      } else {
+        Alert.alert('Login Failed', data.message || 'Invalid email or password.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.alert('Login Failed', 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
@@ -27,6 +64,8 @@ const Login = ({ navigation }) => {
                   style={styles.input}
                   placeholder="Email"
                   placeholderTextColor="#999"
+                  value={email}
+                  onChangeText={setEmail}
                 />
               </View>
               <View style={styles.inputContainer}>
@@ -35,28 +74,25 @@ const Login = ({ navigation }) => {
                   placeholder="Password"
                   placeholderTextColor="#999"
                   secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
                 />
               </View>
 
-              <TouchableOpacity style={styles.loginButton}>
-                <Text style={styles.loginButtonText}>Login</Text>
+              <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.loginButtonText}>Login</Text>
+                )}
               </TouchableOpacity>
 
-              {/* Sign Up Button */}
               <TouchableOpacity
                 style={styles.signupButton}
                 onPress={() => navigation.navigate('SignUp')}
               >
                 <Text style={styles.signupButtonText}>Don't have an account? Sign Up</Text>
-              </TouchableOpacity>
-
-              {/* Development Button to go to Home Dashboard */}
-              <TouchableOpacity
-                style={styles.devButton}
-                onPress={() => navigation.navigate('HomeDashboard')}
-              >
-                <Text style={styles.devButtonText}>Go to Dashboard</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> 
             </View>
           </View>
         </View>
@@ -132,18 +168,6 @@ const styles = StyleSheet.create({
   },
   signupButtonText: {
     color: '#000',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  devButton: {
-    backgroundColor: '#007BFF',
-    borderRadius: 20,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  devButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },

@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Login from './screens/Login';  // Correct import path
-import SignUp from './screens/Signup'; // Correct import path
+import Login from './screens/Login'; 
+import SignUp from './screens/Signup'; 
 import HomeDashboard from './screens/HomeDashboard';
 import WeatherScreen from './screens/WeatherScreen';
 import MedicineTracker from './screens/MedicineTracker';

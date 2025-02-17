@@ -1,15 +1,60 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator, Alert } from 'react-native';
 
 const SignUp = ({ navigation }) => {
   const [gender, setGender] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  // Simulate successful sign up and navigate to login
-  const handleSignUp = () => {
-    // Here you can add logic to save user data (e.g., API call)
-    // After successful sign-up, navigate to the Login screen
+  const handleSignUp = async () => {
+    setLoading(true);
+    console.log('Registration process started');
+
+    try {
+      console.log('Sending registration request...');
+      const response = await fetch('http://192.168.18.56:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          gender,
+          age,
+          mobile,
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Response received:', data);
+
+      if (response.ok) {
+        console.log('Registration successful');
+        setTermsModalVisible(true);
+      } else {
+        console.log('Registration failed:', data.message);
+        Alert.alert('Registration Failed', data.message || 'Registration failed');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.alert('Registration Failed', 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAgreeToTerms = () => {
+    setTermsModalVisible(false);
+    Alert.alert('Thank you for agreeing to the terms!');
     navigation.navigate('Login');
   };
 
@@ -21,12 +66,11 @@ const SignUp = ({ navigation }) => {
 
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <View style={styles.innerContainer}>
-          {/* Debugging Button for Navigation */}
           <TouchableOpacity 
             style={styles.debugButton} 
             onPress={() => navigation.navigate('Login')}
           >
-            <Text style={styles.debugButtonText}>Go to Login (Debug)</Text>
+            <Text style={styles.debugButtonText}>Login</Text>
           </TouchableOpacity>
 
           <View style={styles.lightsContainer}>
@@ -40,16 +84,16 @@ const SignUp = ({ navigation }) => {
             </View>
 
             <View style={styles.formContainer}>
-              {/* Name Input */}
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
                   placeholder="Name"
                   placeholderTextColor="#999"
+                  value={name}
+                  onChangeText={setName}
                 />
               </View>
 
-              {/* Gender Selection */}
               <TouchableOpacity 
                 style={styles.inputContainer} 
                 onPress={() => setModalVisible(true)}
@@ -63,7 +107,6 @@ const SignUp = ({ navigation }) => {
                 />
               </TouchableOpacity>
 
-              {/* Gender Modal */}
               <Modal
                 animationType="slide"
                 transparent={true}
@@ -90,47 +133,86 @@ const SignUp = ({ navigation }) => {
                 </View>
               </Modal>
 
-              {/* Age Input */}
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
                   placeholder="Age"
                   placeholderTextColor="#999"
                   keyboardType="numeric"
+                  value={age}
+                  onChangeText={setAge}
                 />
               </View>
 
-              {/* Mobile Number Input */}
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
                   placeholder="Mobile Number"
                   placeholderTextColor="#999"
                   keyboardType="phone-pad"
+                  value={mobile}
+                  onChangeText={setMobile}
                 />
               </View>
 
-              {/* Email Input */}
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
                   placeholder="Email"
                   placeholderTextColor="#999"
                   keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
                 />
               </View>
 
-              {/* Sign Up Button */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor="#999"
+                  secureTextEntry={true}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+              </View>
+
               <TouchableOpacity style={styles.loginButton} onPress={handleSignUp}>
-                <Text style={styles.loginButtonText}>Sign Up</Text>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.loginButtonText}>Sign Up</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </TouchableWithoutFeedback>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={termsModalVisible}
+        onRequestClose={() => setTermsModalVisible(false)}
+      >
+        <View style={styles.modalView}>
+          <Text style={styles.modalTitle}>Terms and Conditions</Text>
+          <Text style={styles.termsText}>
+            By signing up, you agree to our terms and conditions.
+          </Text>
+          <TouchableOpacity 
+            style={styles.modalCloseButton} 
+            onPress={handleAgreeToTerms}
+          >
+            <Text style={styles.modalCloseButtonText}>I Agree</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
-};
+}
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -237,6 +319,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  agreeButton: {
+    backgroundColor: '#007BFF', // Change to your preferred color
+    borderRadius: 20,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  agreeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  termsText: {
+    marginVertical: 10,
+    textAlign: 'center',
   },
 });
 
