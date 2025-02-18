@@ -6,13 +6,13 @@ const NavBar = ({ navigation }) => {
     return (
         <View style={styles.navbarContainer}>
             <TouchableOpacity onPress={() => navigation.navigate('HomeDashboard')}>
-                <Ionicons name="home" size={32} color="orange" />
+                <Ionicons name="home" size={40} color="orange" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('MedicineTracker')}>
-                <Ionicons name="heart" size={32} color="red" />
+                <Ionicons name="heart" size={40} color="red" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('ContactsScreen')}>
-                <Ionicons name="call" size={32} color="green" />
+                <Ionicons name="call" size={40} color="green" />
             </TouchableOpacity>
         </View>
     );
@@ -25,9 +25,8 @@ const styles = {
         left: 0,
         right: 0,
         paddingBottom: 30,
-        backgroundColor: 'white',
-        borderTopWidth: 1,
-        borderTopColor: '#ccc',
+        backgroundColor: 'transparent',
+        borderTopWidth: 0,
         flexDirection: 'row',
         justifyContent: 'space-around',
         paddingVertical: 25,

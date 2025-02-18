@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import React, { useState } from 'react'; 
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, KeyboardAvoidingView, Platform, FlatList, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
-import moment from 'moment'; // Import moment for time formatting
-import NavBar from '../components/NavBar'; // Import NavBar
+import moment from 'moment';
+import NavBar from '../components/NavBar';
 
 const MedicineTracker = ({ navigation }) => {
     const [selectedDate, setSelectedDate] = useState('');
     const [medicineName, setMedicineName] = useState('');
     const [dosage, setDosage] = useState('');
-    const [time, setTime] = useState(''); // Store time as a string
-    const [isTimeValid, setIsTimeValid] = useState(true); // Track time validity
-    const [scheduleList, setScheduleList] = useState([]); // Store list of scheduled medicines
-    const [modalVisible, setModalVisible] = useState(false); // Track modal visibility
+    const [time, setTime] = useState('');
+    const [isTimeValid, setIsTimeValid] = useState(true);
+    const [scheduleList, setScheduleList] = useState([]);
+    const [modalVisible, setModalVisible] = useState(false);
 
     const handleAddSchedule = () => {
         if (!selectedDate || !medicineName || !dosage || !time) {
@@ -20,15 +20,13 @@ const MedicineTracker = ({ navigation }) => {
             return;
         }
 
-        // Validate time input
         if (!moment(time, 'hh:mm A', true).isValid()) {
             setIsTimeValid(false);
             return;
         }
 
-        // Add schedule to list
         const newSchedule = {
-            id: Math.random().toString(), // Generate unique ID
+            id: Math.random().toString(),
             date: selectedDate,
             medicineName,
             dosage,
@@ -38,7 +36,6 @@ const MedicineTracker = ({ navigation }) => {
 
         Alert.alert('Medicine Schedule Added', `You have scheduled ${medicineName} for ${time} on ${selectedDate}`);
 
-        // Reset form fields and close modal
         setMedicineName('');
         setDosage('');
         setTime('');
@@ -55,138 +52,114 @@ const MedicineTracker = ({ navigation }) => {
     );
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.container}
-        >
-            <Text style={styles.header}>Medicine Tracker</Text>
+        <ImageBackground
+                    source={require('../assets/images/background.jpg')} 
+                    style={styles.backgroundImage}
+                    resizeMode="cover" 
+                >
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+                <Text style={styles.header}>Medicine Tracker</Text>
 
-            <Calendar
-                onDayPress={(day) => setSelectedDate(day.dateString)}
-                markedDates={{
-                    [selectedDate]: {
-                        selected: true,
-                        selectedColor: 'orange',
-                        selectedTextColor: 'white',
-                    },
-                }}
-                theme={{
-                    selectedDayBackgroundColor: 'orange',
-                    selectedDayTextColor: 'white',
-                }}
-            />
-
-            <View style={styles.scheduleListContainer}>
-                <Text style={styles.scheduleListHeader}>Scheduled Medicines</Text>
-                <FlatList
-                    data={scheduleList}
-                    renderItem={renderScheduleItem}
-                    keyExtractor={(item) => item.id}
+                <Calendar
+                    onDayPress={(day) => setSelectedDate(day.dateString)}
+                    markedDates={{
+                        [selectedDate]: { selected: true, selectedColor: 'orange', selectedTextColor: 'white' },
+                    }}
+                    theme={{
+                        selectedDayBackgroundColor: 'orange',
+                        selectedDayTextColor: 'white',
+                    }}
                 />
-            </View>
 
-            {/* Plus icon to open the form modal */}
-            <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => setModalVisible(true)}
-            >
-                <Ionicons name="add" size={40} color="white" />
-            </TouchableOpacity>
-
-            {/* Modal for adding medicine schedule */}
-            <Modal
-                visible={modalVisible}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalHeader}>Add Medicine Schedule</Text>
-
-                        <Text style={styles.label}>Medicine Name</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter medicine name"
-                            value={medicineName}
-                            onChangeText={setMedicineName}
-                        />
-
-                        <Text style={styles.label}>Dosage</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter dosage (e.g., 2 tablets)"
-                            value={dosage}
-                            onChangeText={setDosage}
-                        />
-
-                        <Text style={styles.label}>Time</Text>
-                        <TextInput
-                            style={[styles.input, !isTimeValid && styles.invalidInput]}
-                            placeholder="Enter time (e.g., 08:30 AM)"
-                            value={time}
-                            onChangeText={(input) => {
-                                setTime(input);
-                                setIsTimeValid(true); // Reset validity when user starts typing
-                            }}
-                        />
-                        {!isTimeValid && <Text style={styles.errorText}>Invalid time format. Please use hh:mm AM/PM.</Text>}
-
-                        <TouchableOpacity style={styles.button} onPress={handleAddSchedule}>
-                            <Text style={styles.buttonText}>Add Schedule</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.closeButton}
-                            onPress={() => setModalVisible(false)}
-                        >
-                            <Text style={styles.buttonText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
+                <View style={styles.scheduleListContainer}>
+                    <Text style={styles.scheduleListHeader}>Scheduled Medicines</Text>
+                    <FlatList data={scheduleList} renderItem={renderScheduleItem} keyExtractor={(item) => item.id} />
                 </View>
-            </Modal>
 
-            <NavBar navigation={navigation} /> {/* Add NavBar here */}
-        </KeyboardAvoidingView>
+                <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+                    <Ionicons name="add" size={40} color="white" />
+                </TouchableOpacity>
+
+                <Modal visible={modalVisible} animationType="slide" transparent={true} onRequestClose={() => setModalVisible(false)}>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
+                            <Text style={styles.modalHeader}>Add Medicine Schedule</Text>
+
+                            <Text style={styles.label}>Medicine Name</Text>
+                            <TextInput style={styles.input} placeholder="Enter medicine name" value={medicineName} onChangeText={setMedicineName} />
+
+                            <Text style={styles.label}>Dosage</Text>
+                            <TextInput style={styles.input} placeholder="Enter dosage (e.g., 2 tablets)" value={dosage} onChangeText={setDosage} />
+
+                            <Text style={styles.label}>Time</Text>
+                            <TextInput
+                                style={[styles.input, !isTimeValid && styles.invalidInput]}
+                                placeholder="Enter time (e.g., 08:30 AM)"
+                                value={time}
+                                onChangeText={(input) => {
+                                    setTime(input);
+                                    setIsTimeValid(true);
+                                }}
+                            />
+                            {!isTimeValid && <Text style={styles.errorText}>Invalid time format. Please use hh:mm AM/PM.</Text>}
+
+                            <TouchableOpacity style={styles.button} onPress={handleAddSchedule}>
+                                <Text style={styles.buttonText}>Add Schedule</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                                <Text style={styles.buttonText}>Close</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
+                <NavBar navigation={navigation} />
+            </KeyboardAvoidingView>
+        </ImageBackground>
     );
 };
 
 const styles = StyleSheet.create({
+    backgroundImage: {
+        flex: 1,
+        resizeMode: 'cover',
+    },
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)', // 80% opacity
     },
     header: {
         bottom: -20,
-        fontSize: 28,  // Larger font size for better readability
+        fontSize: 28,
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
-        color: '#333',  // Darker color for better contrast
+        color: '#333',
     },
     scheduleListContainer: {
         marginTop: 20,
-        paddingBottom: 80, // Add space for the navbar
+        paddingBottom: 80,
     },
     scheduleListHeader: {
-        fontSize: 22,  // Increased font size
+        fontSize: 22,
         fontWeight: 'bold',
-        marginBottom: 15,  // More space between header and list
+        marginBottom: 15,
         color: '#333',
     },
     scheduleItem: {
-        backgroundColor: '#fff',
-        padding: 15,  // Increased padding for easier touch interaction
+        backgroundColor: 'rgba(255, 255, 255, 0.7)', // 70% opacity
+        padding: 15,
         borderRadius: 5,
-        marginBottom: 15,  // More space between items
+        marginBottom: 15,
         borderColor: '#ccc',
         borderWidth: 1,
     },
     scheduleText: {
-        fontSize: 16,  // Larger font size for item text
+        fontSize: 16,
         color: '#333',
-        lineHeight: 24, // Better line height for readability
+        lineHeight: 24,
     },
     addButton: {
         position: 'absolute',
@@ -194,7 +167,7 @@ const styles = StyleSheet.create({
         right: 30,
         backgroundColor: 'orange',
         borderRadius: 200,
-        padding: 30,  // Larger padding for easier clicking
+        padding: 30,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -206,45 +179,45 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         width: '80%',
-        padding: 25,  // Increased padding for comfort
-        backgroundColor: 'white',
+        padding: 25,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)', // 90% opacity
         borderRadius: 10,
         alignItems: 'center',
     },
     modalHeader: {
-        fontSize: 24,  // Larger header font
+        fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 15,
         color: '#333',
     },
     label: {
-        fontSize: 18,  // Larger label font for better clarity
+        fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
         color: '#333',
     },
     input: {
-        height: 50,  // Increased height for easier touch
+        height: 50,
         borderColor: '#ccc',
         borderWidth: 1,
-        marginBottom: 20, // Added space between inputs
-        paddingLeft: 15,  // Increased padding for easier typing
+        marginBottom: 20,
+        paddingLeft: 15,
         borderRadius: 5,
         justifyContent: 'center',
         width: '100%',
-        fontSize: 18,  // Larger text size for input
+        fontSize: 18,
     },
     invalidInput: {
         borderColor: 'red',
     },
     errorText: {
         color: 'red',
-        fontSize: 14,  // Slightly larger error text
+        fontSize: 14,
         marginBottom: 10,
     },
     button: {
         backgroundColor: 'orange',
-        padding: 20,  // Increased padding for better touch
+        padding: 20,
         borderRadius: 10,
         alignItems: 'center',
         width: '100%',
@@ -252,31 +225,15 @@ const styles = StyleSheet.create({
     buttonText: {
         color: 'white',
         fontWeight: 'bold',
-        fontSize: 18,  // Larger text for button
+        fontSize: 18,
     },
     closeButton: {
         backgroundColor: 'gray',
-        padding: 20,  // Increased padding for close button
+        padding: 20,
         borderRadius: 10,
         alignItems: 'center',
         marginTop: 15,
         width: '100%',
-    },
-    navbarContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        paddingBottom: 30,
-        backgroundColor: 'white',
-        borderTopWidth: 1,
-        borderTopColor: '#ccc',
-    },
-    navbar: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingVertical: 25,
-        backgroundColor: 'white',
     },
 });
 

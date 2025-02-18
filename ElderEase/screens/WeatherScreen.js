@@ -112,7 +112,7 @@ const WeatherScreen = ({ route }) => {
                 keyExtractor={(item) => item.date}
                 contentContainerStyle={styles.container}
             />
-            <NavBar navigation={navigation} /> {/* Add NavBar here */}
+           
         </ImageBackground>
     );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Button, Linking, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Button, Linking, Alert, ImageBackground } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,9 +8,11 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import usePreventRemove from '../hooks/usePreventRemove';
 import TutorialScreen from './TutorialScreen';
-import NavBar from '../components/NavBar'; // Import NavBar
+import NavBar from '../components/NavBar';
+import { LogBox } from 'react-native';
 
 const HomeDashboard = ({ navigation }) => {
+    LogBox.ignoreAllLogs();
     usePreventRemove();
 
     const [profileImage, setProfileImage] = useState('https://via.placeholder.com/100'); // Default image
@@ -30,6 +32,7 @@ const HomeDashboard = ({ navigation }) => {
     const [isModalVisible, setIsModalVisible] = useState(true);
     const [hasSeenIntro, setHasSeenIntro] = useState(false);
     const [isMenuVisible, setIsMenuVisible] = useState(false);
+    const [isTutorialVisible, setIsTutorialVisible] = useState(false); // State for tutorial visibility
 
     const API_KEY = '2960c45ce4594eec984215930251702'; // Your WeatherAPI key
     const API_URL = `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=Cabuyao`;
@@ -168,12 +171,6 @@ const HomeDashboard = ({ navigation }) => {
         await AsyncStorage.setItem('hasSeenIntro', 'true'); // Set flag in AsyncStorage
     };
 
-    // Handle menu options
-    const handleHelp = () => {
-        setIsMenuVisible(false);
-        navigation.navigate('TutorialScreen'); // Navigate to a tutorial screen
-    };
-
     const handleLogout = async () => {
         setIsMenuVisible(false);
         await AsyncStorage.removeItem('userName'); // Clear user name
@@ -188,125 +185,133 @@ const HomeDashboard = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
-            {/* Menu Button */}
-            <TouchableOpacity
-                style={styles.menuButton}
-                onPress={() => setIsMenuVisible(true)}
-            >
-                <Ionicons name="menu" size={32} color="black" />
-            </TouchableOpacity>
-
-            {/* Menu Modal */}
-            <Modal
-                transparent={true}
-                visible={isMenuVisible}
-                onRequestClose={() => setIsMenuVisible(false)}
-            >
-                <View style={styles.menuModalContainer}>
-                    <View style={styles.menuModalContent}>
-                        {/* Logo */}
-                        <Image
-                            source={require('../assets/images/elderease.png')} // Replace with your logo path
-                            style={styles.logo}
-                        />
-                        <TouchableOpacity onPress={handleHelp} style={styles.menuOption}>
-                            <Text style={styles.menuOptionText}>Help - Tutorial</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handleAboutDevTeam} style={styles.menuOption}>
-                            <Text style={styles.menuOptionText}>About Dev Team</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handleLogout} style={styles.menuOption}>
-                            <Text style={styles.menuOptionText}>Logout</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setIsMenuVisible(false)} style={styles.menuOption}>
-                            <Text style={styles.menuOptionText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-
-            {/* Modal for Introduction */}
-            {isModalVisible && !hasSeenIntro && (
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={isModalVisible}
-                    onRequestClose={closeModal}
+        <ImageBackground
+            source={require('../assets/images/wallpaper.jpg')}
+            style={styles.backgroundImage}
+            resizeMode="cover"
+        >
+            <View style={styles.container}>
+                {/* Menu Button */}
+                <TouchableOpacity
+                    style={styles.menuButton}
+                    onPress={() => setIsMenuVisible(true)}
                 >
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>Welcome to ElderEase!</Text>
-                            <Text style={styles.modalText}>
-                                This app is designed to offer you a seamless and user-friendly experience, putting everything you need in one place.
-                                Whether you're looking to track the weather, manage your personal health, or stay connected with loved ones, this app has you covered.
-                            </Text>
-                            <Button title="Got it!" onPress={closeModal} />
+                    <Ionicons name="menu" size={32} color="black" />
+                </TouchableOpacity>
+
+                {/* Menu Modal */}
+                <Modal
+                    transparent={true}
+                    visible={isMenuVisible}
+                    onRequestClose={() => setIsMenuVisible(false)}
+                >
+                    <View style={styles.menuModalContainer}>
+                        <View style={styles.menuModalContent}>
+                            {/* Logo */}
+                            <Image
+                                source={require('../assets/images/elderease.png')} // Replace with your logo path
+                                style={styles.logo}
+                            />
+                            <TouchableOpacity onPress={() => { setIsMenuVisible(false); setIsTutorialVisible(true); }} style={styles.menuOption}>
+                                <Text style={styles.menuOptionText}>Tutorial</Text> {/* Navigate to Tutorial */}
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => { setIsMenuVisible(false); navigation.navigate('AboutDevTeamScreen'); }} style={styles.menuOption}>
+    <Text style={styles.menuOptionText}>About Development Team</Text>
+</TouchableOpacity>
+                            <TouchableOpacity onPress={handleLogout} style={styles.menuOption}>
+                                <Text style={styles.menuOptionText}>Logout</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setIsMenuVisible(false)} style={styles.menuOption}>
+                                <Text style={styles.menuOptionText}>Close</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </Modal>
-            )}
 
-            {/* Profile Section */}
-            <View style={styles.profileContainer}>
-                <TouchableOpacity onPress={pickImage} style={styles.profileImageContainer}>
-                    <Image source={{ uri: profileImage || 'https://via.placeholder.com/100' }} style={styles.profileImage} />
-                    <View style={styles.uploadIconContainer}>
-                        <Ionicons name="camera" size={24} color="white" />
-                    </View>
-                </TouchableOpacity>
-                <Text style={styles.greeting}>Hello, {registeredUserName || 'User'}</Text> {/* Display user name or default text */}
-            </View>
+                {/* Tutorial Modal */}
+                <TutorialScreen visible={isTutorialVisible} onClose={() => setIsTutorialVisible(false)} />
 
-            {/* Weather and Map Widgets */}
-            <View style={styles.widgetContainer}>
-                <TouchableOpacity
-                    style={styles.weatherContainer}
-                    onPress={() => navigation.navigate('WeatherScreen', { city: weather.city })} // Pass city to WeatherScreen
-                >
-                    <LinearGradient
-                        colors={['#021526', '#03346E']}
-                        style={styles.gradientOverlay}
+                {isModalVisible && !hasSeenIntro && (
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={isModalVisible}
+                        onRequestClose={closeModal}
                     >
-                        <View style={styles.weatherWidget}>
-                            <Text style={styles.widgetTitle}>{weather.city}</Text>
-                            <Image source={{ uri: weather.icon }} style={styles.weatherIcon} />
-                            <Text style={styles.widgetTemp}>{weather.temp}</Text>
-                            <Text style={styles.widgetDescription}>{weather.description}</Text>
-                            <View style={styles.weatherDetails}>
-                                <Text style={styles.detailsText}>Humidity: {weather.humidity}</Text>
-                                <Text style={styles.detailsText}>Wind Speed: {weather.windSpeed}</Text>
-                                <Text style={styles.detailsText}>Feels Like: {weather.feelsLike}</Text>
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalContent}>
+                                <Text style={styles.modalTitle}>Welcome to ElderEase!</Text>
+                                <Text style={styles.modalText}>
+                                    This app is designed to offer you a seamless and user-friendly experience, putting everything you need in one place.
+                                    Whether you're looking to track the weather, manage your personal health, or stay connected with loved ones, this app has you covered.
+                                </Text>
+                                <Button title="Got it!" onPress={closeModal} />
                             </View>
                         </View>
-                    </LinearGradient>
-                </TouchableOpacity>
-                <View style={styles.widget}>
-                    <Image source={{ uri: 'https://via.placeholder.com/150' }} style={styles.mapImage} />
-                </View>
-            </View>
-
-            {/* GPS Map Tracker */}
-            <View style={styles.mapContainer}>
-                {location ? (
-                    <MapView
-                        style={styles.map}
-                        initialRegion={{
-                            latitude: location.latitude,
-                            longitude: location.longitude,
-                            latitudeDelta: 0.0922,
-                            longitudeDelta: 0.0421,
-                        }}
-                    >
-                        <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} />
-                    </MapView>
-                ) : (
-                    <Text>{errorMsg ? errorMsg : 'Loading location...'}</Text>
+                    </Modal>
                 )}
-            </View>
 
-            <NavBar navigation={navigation} /> {/* Add NavBar here */}
-        </View>
+// Profile Section
+                <View style={styles.profileContainer}>
+                    <TouchableOpacity onPress={pickImage} style={styles.profileImageContainer}>
+                        <Image source={{ uri: profileImage || 'https://via.placeholder.com/100' }} style={styles.profileImage} />
+                        <View style={styles.uploadIconContainer}>
+                            <Ionicons name="camera" size={24} color="white" />
+                        </View>
+                    </TouchableOpacity>
+                    <Text style={styles.greeting}>Hello, {registeredUserName || 'User'}</Text> {/* Ensure this is wrapped in <Text> */}
+                </View>
+
+// Weather and Map Widgets
+                <View style={styles.widgetContainer}>
+                    <TouchableOpacity
+                        style={styles.weatherContainer}
+                        onPress={() => navigation.navigate('WeatherScreen', { city: weather.city })} // Pass city to WeatherScreen
+                    >
+                        <LinearGradient
+                            colors={['#021526', '#03346E']}
+                            style={styles.gradientOverlay}
+                        >
+                            <View style={styles.weatherWidget}>
+                                <Text style={styles.widgetTitle}>{weather.city}</Text> {/* Ensure this is wrapped in <Text> */}
+                                <Image source={{ uri: weather.icon }} style={styles.weatherIcon} />
+                                <Text style={styles.widgetTemp}>{weather.temp}</Text> {/* Ensure this is wrapped in <Text> */}
+                                <Text style={styles.widgetDescription}>{weather.description}</Text> {/* Ensure this is wrapped in <Text> */}
+                                <View style={styles.weatherDetails}>
+                                    <Text style={styles.detailsText}>Humidity: {weather.humidity}</Text> {/* Ensure this is wrapped in <Text> */}
+                                    <Text style={styles.detailsText}>Wind Speed: {weather.windSpeed}</Text> {/* Ensure this is wrapped in <Text> */}
+                                    <Text style={styles.detailsText}>Feels Like: {weather.feelsLike}</Text> {/* Ensure this is wrapped in <Text> */}
+                                </View>
+                            </View>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                    <View style={styles.widget}>
+                        <Image source={{ uri: 'https://via.placeholder.com/150' }} style={styles.mapImage} />
+                    </View>
+                </View>
+
+                {/* GPS Map Tracker */}
+                <View style={styles.mapContainer}>
+                    {location ? (
+                        <MapView
+                            style={styles.map}
+                            initialRegion={{
+                                latitude: location.latitude,
+                                longitude: location.longitude,
+                                latitudeDelta: 0.0922,
+                                longitudeDelta: 0.0421,
+                            }}
+                        >
+                            <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} />
+                        </MapView>
+                    ) : (
+                        <Text style={styles.errorText}>{errorMsg ? errorMsg : 'Loading location...'}</Text>
+                    )}
+                </View>
+
+                <NavBar navigation={navigation} /> 
+            </View>
+        </ImageBackground>
     );
 };
 
@@ -439,15 +444,22 @@ const styles = StyleSheet.create({
         top: 40,
         right: 20,
         zIndex: 1,
+        width: 60, // Set a width for the button
+        height: 60, // Set a height for the button
+        backgroundColor: 'rgba(255, 255, 255, 0.7)', // Optional: Add a background color for better visibility
+        borderRadius: 30, // Make it circular
+        alignItems: 'center', // Center the icon horizontally
+        justifyContent: 'center', // Center the icon vertically
     },
     menuModalContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        padding: 20,
     },
     menuModalContent: {
-        width: '60%',
+        width: '90%',
         backgroundColor: 'white',
         borderRadius: 10,
         padding: 20,
@@ -455,9 +467,7 @@ const styles = StyleSheet.create({
     },
     menuOption: {
         paddingVertical: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-        width: '100%',
+        width: '300%',
         alignItems: 'center',
     },
     menuOptionText: {
@@ -468,6 +478,15 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         marginBottom: 20,
+    },
+    backgroundImage: {
+        flex: 1,
+        resizeMode: 'cover',
+    },
+    errorText: {
+        fontSize: 16,
+        color: 'red',
+        textAlign: 'center',
     },
 });
 
