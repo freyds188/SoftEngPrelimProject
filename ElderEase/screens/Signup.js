@@ -253,15 +253,28 @@ const SignUp = ({ navigation }) => {
               <Text style={styles.modalTitle}>Terms and Conditions</Text>
               <ScrollView style={styles.termsScrollView}>
                 <Text style={styles.termsText}>
-                  By signing up, you agree to our terms and conditions. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                  Elder Ease is committed to protecting your privacy. By using our mobile app, you agree to our data collection and usage policies. We collect personal data such as your name, email, and phone number, as well as usage data like your IP address, device information, and app activity. With your permission, we may also access your location, contacts, camera, and photos.
+
+                  We use this information to provide and improve the app, manage user accounts, send updates and offers, and comply with legal requirements. You have the right to update or delete your data through the app settings, and we do not sell personal information. While we take security measures to protect your data, no system is completely risk-free.
+
+                  Our app is not intended for users under 13, and we do not knowingly collect their data. Any changes to this policy will be notified in the app. If you have questions, you can contact us at elderease@gmail.com..By signing up, you agree to our terms and conditions.
                 </Text>
               </ScrollView>
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={handleAgreeToTerms}
-              >
-                <Text style={styles.modalCloseButtonText}>I Agree</Text>
-              </TouchableOpacity>
+              {/* Buttons Container */}
+              <View style={styles.buttonsContainer}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.agreeButton]}
+                  onPress={handleAgreeToTerms}
+                >
+                  <Text style={styles.modalButtonText}>I Agree</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.declineButton]}
+                  onPress={() => setTermsModalVisible(false)}
+                >
+                  <Text style={styles.modalButtonText}>I Decline</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </TouchableWithoutFeedback>
@@ -367,23 +380,37 @@ const styles = StyleSheet.create({
     fontSize: 18,
     paddingVertical: 10,
   },
-  modalCloseButton: {
-    marginTop: 20,
-    backgroundColor: '#000',
-    padding: 10,
-    borderRadius: 5,
-  },
-  modalCloseButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
   termsScrollView: {
     maxHeight: 200,
     marginVertical: 10,
   },
   termsText: {
     textAlign: 'center',
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 5,
+  },
+  agreeButton: {
+    backgroundColor: '#4CAF50', // Green color for "I Agree"
+  },
+  declineButton: {
+    backgroundColor: '#FF6347', // Red color for "I Decline"
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

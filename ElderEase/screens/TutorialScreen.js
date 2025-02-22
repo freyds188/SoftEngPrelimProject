@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Button, Modal, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, Modal, Dimensions, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
 
 const { width, height } = Dimensions.get('window');
@@ -23,9 +23,8 @@ const TutorialScreen = ({ visible, onClose }) => {
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContainer}>
                     <ScrollView
-                        horizontal
                         pagingEnabled
-                        showsHorizontalScrollIndicator={false}
+                        showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.scrollContainer}
                     >
                         {/* Existing Pages */}
@@ -76,7 +75,14 @@ const TutorialScreen = ({ visible, onClose }) => {
                             <Image source={require('../assets/images/contactstut.jpg')} style={styles.image} />
                         </View>
                     </ScrollView>
-                    <Button title="Got it!" onPress={handleGotItPress} style={styles.closeButton} />
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity style={styles.skipButton} onPress={onClose}>
+                            <Text style={styles.buttonText}>Skip</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.gotItButton} onPress={handleGotItPress}>
+                            <Text style={styles.buttonText}>Got it!</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         </Modal>
@@ -127,8 +133,37 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginBottom: 10,
     },
-    closeButton: {
-        marginTop: 20,
+    buttonContainer: {
+        flexDirection: 'row', // Align buttons in a row
+        justifyContent: 'space-between', // Space between buttons
+        marginTop: 20, // Add some margin for spacing
+        width: '100%', // Take full width of the modal
+        paddingHorizontal: 20, // Add horizontal padding
+    },
+    skipButton: {
+        backgroundColor: '#FF6347', // Red color for skip button
+        paddingVertical: 15, // Increase vertical padding
+        paddingHorizontal: 30, // Increase horizontal padding
+        borderRadius: 10, // Rounded corners
+        alignItems: 'center', // Center text horizontally
+        justifyContent: 'center', // Center text vertically
+        flex: 1, // Take equal space
+        marginRight: 10, // Add margin between buttons
+    },
+    gotItButton: {
+        backgroundColor: '#4CAF50', // Green color for Got it button
+        paddingVertical: 15, // Increase vertical padding
+        paddingHorizontal: 30, // Increase horizontal padding
+        borderRadius: 10, // Rounded corners
+        alignItems: 'center', // Center text horizontally
+        justifyContent: 'center', // Center text vertically
+        flex: 1, // Take equal space
+        marginLeft: 10, // Add margin between buttons
+    },
+    buttonText: {
+        fontSize: 24, // Larger font size
+        fontWeight: 'bold', // Bold text
+        color: 'white', // White text for contrast
     },
 });
 
